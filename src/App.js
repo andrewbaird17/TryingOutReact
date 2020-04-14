@@ -1,28 +1,11 @@
 import React from 'react';
+import axios from 'axios';
 import './App.css';
-
-const testData = [
-	{
-		name: 'Dan Abramov',
-		avatar_url: 'https://avatars0.githubusercontent.com/u/810438?v=4',
-		company: 'Facebook',
-	},
-	{
-		name: 'Sophie Alpert',
-		avatar_url: 'https://avatars2.githubusercontent.com/u/6820?v=4',
-		company: 'Humu',
-	},
-	{
-		name: 'Sebastian Markbåge',
-		avatar_url: 'https://avatars2.githubusercontent.com/u/63648?v=4',
-		company: 'Facebook',
-	},
-];
 
 const CardList = (props) => (
 	<div>
 		{props.profiles.map((profile) => (
-			<Card {...profile} />
+			<Card key={profile.id} {...profile} />
 		))}
 	</div>
 );
@@ -34,8 +17,8 @@ class Card extends React.Component {
 			<div className="github-profile">
 				<img src={profile.avatar_url} alt="Avatar" />
 				<div className="info">
-					<div className="name">{profile.name}</div>
-					<div className="company">{profile.company}</div>
+					<div className="name">{profile.login}</div>
+					<div className="company">{profile.public_repos}</div>
 				</div>
 			</div>
 		);
@@ -47,9 +30,14 @@ class Form extends React.Component {
 		super(props);
 		this.state = { userName: '' };
 	}
-	handleSubmit = (event) => {
+	handleSubmit = async (event) => {
 		event.preventDefault();
-		console.log(this.state.userName);
+		const response = await axios.get(
+			`https://api.github.com/users/${this.state.userName}`
+		);
+		console.log(response.data);
+		this.props.onSubmit(response.data);
+		this.setState({ userName: '' });
 	};
 	render() {
 		return (
@@ -71,14 +59,19 @@ class App extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			profiles: testData,
+			profiles: [],
 		};
 	}
+	addNewProfile = (profileData) => {
+		this.setState((prevState) => ({
+			profiles: [...prevState.profiles, profileData],
+		}));
+	};
 	render() {
 		return (
 			<div>
 				<div className="header">{this.props.title}</div>
-				<Form />
+				<Form onSubmit={this.addNewProfile} />
 				<CardList profiles={this.state.profiles} />
 			</div>
 		);
